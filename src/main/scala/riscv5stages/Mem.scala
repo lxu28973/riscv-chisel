@@ -2,16 +2,46 @@ package riscv5stages
 
 import chisel3._
 
-class Mem1r1wBundle(addrWidth: Int = 32, dataWidth: Int = 32) extends Bundle {
-  val rdAddr = Input(UInt(addrWidth.W))
-  val rdData = Output(UInt(dataWidth.W))
-  val wrEna = Input(Bool())
-  val wrData = Input(UInt(dataWidth.W))
-  val wrAddr = Input(UInt(addrWidth.W))
+/*
+class MemOutBundle(val dataWidth: Int = 32) extends Bundle {
+  val rdData = UInt(dataWidth.W)
+}
+
+class MemInBundle(val addrWidth: Int = 32, val dataWidth: Int = 32) extends Bundle {
+  val rdAddr = UInt(addrWidth.W)
+  val wrEna = Bool()
+  val wrData = UInt(dataWidth.W)
+  val wrAddr = UInt(addrWidth.W)
 }
 
 class Mem1r1w(depth: Int = 1024, dataType: Data = UInt(32.W)) extends Module{
-  val io = IO(new Mem1r1wBundle())
+  val io = IO(new Bundle {
+    val in = Input(new MemInBundle)
+    val out = Output(new MemOutBundle)
+  })
+  val mem = SyncReadMem(depth, dataType)
+  val wrDataReg = RegNext(io.in.wrData)
+  val doForwardReg = RegNext(io.in.wrAddr === io.in.rdAddr &&
+    io.in.wrEna)
+  val memData = mem.read(io.in.rdAddr)
+  when(io.in.wrEna) {
+    mem.write(io.in.wrAddr , io.in.wrData)
+  }
+  io.out.rdData := Mux(doForwardReg , wrDataReg , memData)
+}
+*/
+
+
+class Mem1r1w(depth: Int = 1024, addrWidth: Int = 32, dataWidth: Int = 32) extends Module{
+  val io = IO(new Bundle {
+    val rdAddr = Input(UInt(addrWidth.W))
+    val rdData = Output(UInt(dataWidth.W))
+    val wrEna = Input(Bool())
+    val wrData = Input(UInt(dataWidth.W))
+    val wrAddr = Input(UInt(addrWidth.W))
+  })
+
+  val dataType = UInt(32.W)
   val mem = SyncReadMem(depth, dataType)
   val wrDataReg = RegNext(io.wrData)
   val doForwardReg = RegNext(io.wrAddr === io.rdAddr &&
