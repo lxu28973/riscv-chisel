@@ -32,25 +32,23 @@ class Mem1r1w(depth: Int = 1024, dataType: Data = UInt(32.W)) extends Module{
 */
 
 
-class Mem1r1w(depth: Int = 1024, addrWidth: Int = 32, dataWidth: Int = 32) extends Module{
+class Mem1r1w(implicit p: Param) extends Module{
   val io = IO(new Bundle {
-    val rdAddr = Input(UInt(addrWidth.W))
-    val rdData = Output(UInt(dataWidth.W))
-    val wrEna = Input(Bool())
-    val wrData = Input(UInt(dataWidth.W))
-    val wrAddr = Input(UInt(addrWidth.W))
+    val rAddr = Input(UInt(p.xlen.W))
+    val rData = Output(UInt(p.memWidth.W))
+    val wEn = Input(Bool())
+    val wData = Input(UInt(p.memWidth.W))
+    val wAddr = Input(UInt(p.xlen.W))
   })
-
-  val dataType = UInt(32.W)
-  val mem = SyncReadMem(depth, dataType)
-  val wrDataReg = RegNext(io.wrData)
-  val doForwardReg = RegNext(io.wrAddr === io.rdAddr &&
-    io.wrEna)
-  val memData = mem.read(io.rdAddr)
-  when(io.wrEna) {
-    mem.write(io.wrAddr , io.wrData)
+  val mem = SyncReadMem(p.memSize, p.memDataType)
+  val wrDataReg = RegNext(io.wData)
+  val doForwardReg = RegNext(io.wAddr === io.rAddr &&
+    io.wEn)
+  val memData = mem.read(io.rAddr)
+  when(io.wEn) {
+    mem.write(io.wAddr , io.rData)
   }
-  io.rdData := Mux(doForwardReg , wrDataReg , memData)
+  io.rData := Mux(doForwardReg , wrDataReg , memData)
 }
 
 class RWSmem extends Module {

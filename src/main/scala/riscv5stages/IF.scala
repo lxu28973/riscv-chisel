@@ -3,9 +3,9 @@ package riscv5stages
 import chisel3._
 import chisel3.Bundle
 
-class IF extends Module{
+class IF(implicit p: Param) extends Module{
   val io = IO(new Bundle() {
-    val pc = Output(UInt(32.W))
+    val pc = Output(UInt(p.xlen.W))
     val hazard = Input(Bool())
     val jpc = Input(UInt(32.W))
     val jumpOrBranch = Input(Bool())
