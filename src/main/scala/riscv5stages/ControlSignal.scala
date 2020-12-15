@@ -19,7 +19,7 @@ object ControlSignal {
   // instruction format
   val r :: i :: s :: b :: u :: j :: Nil = Enum(6)
   // jump or link or not
-  val nonj :: jal :: beq :: bne :: blt :: bge :: Nil = Enum(6)
+  val nonj :: jal :: beq :: bne :: blt :: bltu :: bge :: bgeu :: Nil = Enum(8)
   // load store instruction
   val nonmem :: lb :: lh :: lbu :: lhu :: lw :: sb :: sh :: sw :: Nil = Enum(9)
   // exceptions
@@ -63,9 +63,9 @@ object ControlSignal {
     BEQ    -> List(add,   pc ,  imm,  nonw,  sign, nonsh, b,     beq , nonmem, nonexp),
     BNE    -> List(add,   pc ,  imm,  nonw,  sign, nonsh, b,     bne , nonmem, nonexp),
     BLT    -> List(add,   pc ,  imm,  nonw,  sign, nonsh, b,     blt , nonmem, nonexp),
-    BLTU   -> List(add,   pc ,  imm,  nonw,  unsi, nonsh, b,     blt , nonmem, nonexp),
+    BLTU   -> List(add,   pc ,  imm,  nonw,  unsi, nonsh, b,     bltu, nonmem, nonexp),
     BGE    -> List(add,   pc ,  imm,  nonw,  sign, nonsh, b,     bge , nonmem, nonexp),
-    BGEU   -> List(add,   pc ,  imm,  nonw,  unsi, nonsh, b,     bge , nonmem, nonexp),
+    BGEU   -> List(add,   pc ,  imm,  nonw,  unsi, nonsh, b,     bgeu, nonmem, nonexp),
     LW     -> List(add,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, lw    , nonexp),
     LH     -> List(add,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, lh    , nonexp),
     LB     -> List(add,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, lb    , nonexp),

@@ -3,5 +3,5 @@ import chisel3._
 
 object Main extends App {
   val p = new Param
-  Driver.execute(Array[String](), () => new ID()(p))
+  Driver.execute(Array[String](), () => new Top()(p))
 }

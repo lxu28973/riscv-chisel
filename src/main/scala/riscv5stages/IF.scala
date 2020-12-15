@@ -8,11 +8,11 @@ class IF(implicit p: Param) extends Module{
     val pc = Output(UInt(p.xlen.W))
     val hazard = Input(Bool())
     val jpc = Input(UInt(32.W))
-    val jumpOrBranch = Input(Bool())
+    val toJumpOrBranch = Input(Bool())
   })
 
   val pc = RegInit(0.U(32.W))
-  val muxOut = Mux(io.jumpOrBranch, io.jpc, pc+4.U)
+  val muxOut = Mux(io.toJumpOrBranch, io.jpc, pc+4.U)
 
   when(io.hazard) {
     pc := pc

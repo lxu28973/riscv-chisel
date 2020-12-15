@@ -6,6 +6,15 @@ import chisel3.util._
 //import riscv5stages.ControlSignal._
 import riscv5stages.InstPat._
 
+class IDEXBundle(implicit val p: Param) extends Bundle {
+  val aluA = Output(UInt(p.xlen.W))
+  val aluB = Output(UInt(p.xlen.W))
+  val aluOp = Output(UInt())
+  val writeWhat = Output(UInt(2.W))
+  val sign = Output(Bool())
+  val shift = Output(UInt(2.W))
+  val memOp = Output(UInt())
+}
 
 class ID(implicit p: Param) extends Module{
   val io = IO(new Bundle() {
@@ -13,15 +22,9 @@ class ID(implicit p: Param) extends Module{
     val inst = Input(UInt(p.ilen.W))
     val rs1 = Input(UInt(p.xlen.W))
     val rs2 = Input(UInt(p.xlen.W))
-    val aluA = Output(UInt(p.xlen.W))
-    val aluB = Output(UInt(p.xlen.W))
-    val aluOp = Output(UInt())
-    val writeWhat = Output(UInt(2.W))
-    val sign = Output(Bool())
-    val shift = Output(UInt(2.W))
-    val jump = Output(UInt())
-    val memOp = Output(UInt())
+    val idex = new IDEXBundle()
     val exp = Output(UInt())
+    val toJumpOrBranch = Output(Bool())
   })
 
   val instDecodeRes = ListLookup(io.inst, ControlSignal.instDefault, ControlSignal.instMap)
@@ -36,15 +39,31 @@ class ID(implicit p: Param) extends Module{
   )
 
   val imm = MuxLookup(instT, io.inst, immMap)
-  io.aluA := Mux(aluA === ControlSignal.rs1, io.rs1, io.pc)
-  io.aluB := Mux(aluB === ControlSignal.rs2, io.rs2, imm)
-  io.aluOp := aluOp
-  io.writeWhat := rgMem
-  io.sign := sign.asBool()
-  io.shift := shift
-  io.jump := jump
-  io.memOp := memOp
+  io.idex.aluA := Mux(aluA === ControlSignal.rs1, io.rs1, io.pc)
+  io.idex.aluB := Mux(aluB === ControlSignal.rs2, io.rs2, imm)
+  io.idex.aluOp := aluOp
+  io.idex.writeWhat := rgMem
+  io.idex.sign := sign.asBool()
+  io.idex.shift := shift
+  io.idex.memOp := memOp
   io.exp := exp
+
+  /*** BRANCH ***/
+  val rsEq = (io.rs1 === io.rs2)
+  val rsLt = (io.rs1 < io.rs2)
+  val rsLtU = (io.rs1.asSInt < io.rs2.asSInt)
+  val branchMap = Seq(
+    ControlSignal.nonj -> false.B,
+    ControlSignal.jal -> true.B,
+    ControlSignal.beq -> rsEq,
+    ControlSignal.bne -> !rsEq,
+    ControlSignal.blt -> rsLt,
+    ControlSignal.bltu -> rsLtU,
+    ControlSignal.bge -> !rsLt,
+    ControlSignal.bgeu -> !rsLtU
+  )
+  io.toJumpOrBranch := MuxLookup(jump, false.B, branchMap)
+
 }
 
 
