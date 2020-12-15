@@ -25,8 +25,9 @@ class ID(implicit p: Param) extends Module{
   })
 
 
-  val instDecodeRes = MuxLookup(io.inst, ControlSignal.instDefault, ControlSignal.instMap)
+  val instDecodeRes = ListLookup(io.inst, ControlSignal.instDefault, ControlSignal.instMap)
 
+//  val aluOp :: aluA :: aluB :: rgMem :: sign :: nonsh :: instT :: jump :: memOp ::  exp :: Nil = instDecodeRes
   val immMap = Seq(
     ControlSignal.i -> Cat(Fill(21, io.inst(31)), io.inst(30,20)),
     ControlSignal.s -> Cat(Fill(21, io.inst(31)), io.inst(30,25), io.inst(11,8), io.inst(7)),
@@ -35,12 +36,16 @@ class ID(implicit p: Param) extends Module{
     ControlSignal.i -> Cat(Fill(12, io.inst(31)), io.inst(19,12), io.inst(20), io.inst(30,25), io.inst(24,21), 0.U(1.W))
   )
 
-  val imm = MuxLookup(instDecodeRes(7), io.inst, immMap)
-  io.aluA := Mux(instDecodeRes(2) === ControlSignal.rs1, io.rs1, io.pc)
-  io.aluB := Mux(instDecodeRes(3) === ControlSignal.rs2, io.rs2, imm)
-  io.aluOp := instDecodeRes(1)
-  io.writeWhat := instDecodeRes(4)
-  io.sign = instDecodeRes()
+  val imm = MuxLookup(instDecodeRes(6), io.inst, immMap)
+  io.aluA := Mux(instDecodeRes(1) === ControlSignal.rs1, io.rs1, io.pc)
+  io.aluB := Mux(instDecodeRes(2) === ControlSignal.rs2, io.rs2, imm)
+  io.aluOp := instDecodeRes(0)
+  io.writeWhat := instDecodeRes(3)
+  io.sign := instDecodeRes(4).asBool()
+  io.shift := instDecodeRes(5)
+  io.jump := instDecodeRes(7)
+  io.memOp := instDecodeRes(8)
+  io.exp := instDecodeRes(9)
 }
 
 

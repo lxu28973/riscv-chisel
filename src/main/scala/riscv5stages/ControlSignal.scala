@@ -1,11 +1,11 @@
 package riscv5stages
 
-import chisel3.util.Enum
-import riscv5stages.InstPat.{ADD, ADDI, AND, ANDI, AUIPC, BEQ, BGE, BGEU, BLT, BLTU, BNE, EBREAK, ECALL, FENCE, JAL, JALR, LB, LBU, LH, LHU, LUI, LW, NOP, OR, ORI, SB, SH, SLL, SLLI, SLT, SLTI, SLTIU, SLTU, SRA, SRAI, SRL, SRLI, SUB, SW, XOR, XORI}
+import chisel3.util._
+import riscv5stages.InstPat._
 
 object ControlSignal {
   // aluOp
-  val non :: add :: sub :: slt :: and :: or :: xor :: Nil = Enum(6)
+  val non :: add :: sub :: slt :: and :: or :: xor :: Nil = Enum(7)
   // aluA_sel
   val rs1 :: pc :: Nil = Enum(2)
   // aluB_sel
@@ -34,9 +34,9 @@ object ControlSignal {
   val memOp = nonmem
   val exp = nonexp
 
-  val instDefault =  //1     2     3      4     5      6      7     8      9    10
+  val instDefault =  //0     1     2      3     4      5      6     7      8     9
               List(aluOp, aluA, aluB, rgMem, sign, nonsh, instT, jump, memOp,  exp)
-  val instMap = Seq(
+  val instMap = Array(
     ADDI   -> List(add,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, nonmem, nonexp),
     SLTI   -> List(slt,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, nonmem, nonexp),
     SLTIU  -> List(slt,   rs1,  imm,  rd,    unsi, nonsh, i,     nonj, nonmem, nonexp),
@@ -58,7 +58,6 @@ object ControlSignal {
     SRL    -> List(non,   rs1,  rs2,  rd,    unsi, srl  , r,     nonj, nonmem, nonexp),
     SUB    -> List(sub,   rs1,  rs2,  rd,    sign, nonsh, r,     nonj, nonmem, nonexp),
     SRA    -> List(non,   rs1,  rs2,  rd,    sign, sra  , r,     nonj, nonmem, nonexp),
-    NOP    -> List(non,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, nonmem, nonexp),
     JAL    -> List(add,   pc ,  imm,  rd,    sign, nonsh, j,     jal , nonmem, nonexp),
     JALR   -> List(add,   rs1,  imm,  rd,    sign, nonsh, i,     jal , nonmem, nonexp),
     BEQ    -> List(add,   pc ,  imm,  nonw,  sign, nonsh, b,     beq , nonmem, nonexp),

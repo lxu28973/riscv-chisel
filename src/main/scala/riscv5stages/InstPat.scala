@@ -1,6 +1,6 @@
 package riscv5stages
 
-import chisel3.util.BitPat
+import chisel3.util._
 
 object InstPat {
   // Loads
