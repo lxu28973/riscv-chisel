@@ -3,82 +3,44 @@ package riscv5stages
 import chisel3._
 import chisel3.stage.{ChiselGeneratorAnnotation, ChiselStage}
 import chisel3.util._
+//import riscv5stages.ControlSignal._
 import riscv5stages.InstPat._
+
 
 class ID(implicit p: Param) extends Module{
   val io = IO(new Bundle() {
     val pc = Input(UInt(p.xlen.W))
     val inst = Input(UInt(p.ilen.W))
+    val rs1 = Input(UInt(p.xlen.W))
+    val rs2 = Input(UInt(p.xlen.W))
     val aluA = Output(UInt(p.xlen.W))
     val aluB = Output(UInt(p.xlen.W))
     val aluOp = Output(UInt())
+    val writeWhat = Output(UInt(2.W))
+    val sign = Output(Bool())
+    val shift = Output(UInt(2.W))
+    val jump = Output(UInt())
+    val memOp = Output(UInt())
+    val exp = Output(UInt())
   })
-  val non :: add :: sub :: slt :: and :: or :: xor :: Nil = Enum(6)
-  val rs1 :: pc :: Nil = Enum(2)
-  val rs2 :: imm :: Nil = Enum(2)
-  val nonw :: rd :: mem :: Nil = Enum(3)
-  val sign :: unsi :: Nil = Enum(2)
-  val sll :: srl :: sra :: nonsh :: Nil = Enum(4)
-  val r :: i :: s :: b :: u :: j :: Nil = Enum(4)
-  val nonj :: jal :: beq :: bne :: blt :: bge :: Nil = Enum(6)
-  val nonmem :: lb :: lh :: lbu :: lhu :: lw :: sb :: sh :: sw :: Nil = Enum(9)
-  val nonexp :: ecall :: ebreak :: Nil = Enum(3)
 
-  val aluOp = add
-  val aluA = rs1
-  val aluB = rs2
-  val rgMem = rd
-  val instT = r
-  val jump = nonj
-  val memOp = nonmem
-  val exp = nonexp
 
-  val instDefault =
-             List(aluOp, aluA, aluB, rgMem, sign, nonsh, instT, jump, memOp,  exp)
-  val instMap = Array(
-    ADDI   -> List(add,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, nonmem, nonexp),
-    SLTI   -> List(slt,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, nonmem, nonexp),
-    SLTIU  -> List(slt,   rs1,  imm,  rd,    unsi, nonsh, i,     nonj, nonmem, nonexp),
-    ANDI   -> List(and,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, nonmem, nonexp),
-    ORI    -> List(or ,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, nonmem, nonexp),
-    XORI   -> List(or ,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, nonmem, nonexp),
-    SLLI   -> List(non,   rs1,  imm,  rd,    sign, sll  , i,     nonj, nonmem, nonexp),
-    SRLI   -> List(non,   rs1,  imm,  rd,    sign, srl  , i,     nonj, nonmem, nonexp),
-    SRAI   -> List(non,   rs1,  imm,  rd,    sign, sra  , i,     nonj, nonmem, nonexp),
-    LUI    -> List(non,   rs1,  imm,  rd,    sign, nonsh, u,     nonj, nonmem, nonexp),
-    AUIPC  -> List(add,   pc ,  imm,  rd,    sign, nonsh, u,     nonj, nonmem, nonexp),
-    ADD    -> List(add,   rs1,  rs2,  rd,    sign, nonsh, r,     nonj, nonmem, nonexp),
-    SLT    -> List(slt,   rs1,  rs2,  rd,    sign, nonsh, r,     nonj, nonmem, nonexp),
-    SLTU   -> List(slt,   rs1,  rs2,  rd,    unsi, nonsh, r,     nonj, nonmem, nonexp),
-    AND    -> List(and,   rs1,  rs2,  rd,    unsi, nonsh, r,     nonj, nonmem, nonexp),
-    OR     -> List(or ,   rs1,  rs2,  rd,    unsi, nonsh, r,     nonj, nonmem, nonexp),
-    XOR    -> List(xor,   rs1,  rs2,  rd,    unsi, nonsh, r,     nonj, nonmem, nonexp),
-    SLL    -> List(non,   rs1,  rs2,  rd,    unsi, sll  , r,     nonj, nonmem, nonexp),
-    SRL    -> List(non,   rs1,  rs2,  rd,    unsi, srl  , r,     nonj, nonmem, nonexp),
-    SUB    -> List(sub,   rs1,  rs2,  rd,    sign, nonsh, r,     nonj, nonmem, nonexp),
-    SRA    -> List(non,   rs1,  rs2,  rd,    sign, sra  , r,     nonj, nonmem, nonexp),
-    NOP    -> List(non,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, nonmem, nonexp),
-    JAL    -> List(add,   pc ,  imm,  rd,    sign, nonsh, j,     jal , nonmem, nonexp),
-    JALR   -> List(add,   rs1,  imm,  rd,    sign, nonsh, i,     jal , nonmem, nonexp),
-    BEQ    -> List(add,   pc ,  imm,  nonw,  sign, nonsh, b,     beq , nonmem, nonexp),
-    BNE    -> List(add,   pc ,  imm,  nonw,  sign, nonsh, b,     bne , nonmem, nonexp),
-    BLT    -> List(add,   pc ,  imm,  nonw,  sign, nonsh, b,     blt , nonmem, nonexp),
-    BLTU   -> List(add,   pc ,  imm,  nonw,  unsi, nonsh, b,     blt , nonmem, nonexp),
-    BGE    -> List(add,   pc ,  imm,  nonw,  sign, nonsh, b,     bge , nonmem, nonexp),
-    BGEU   -> List(add,   pc ,  imm,  nonw,  unsi, nonsh, b,     bge , nonmem, nonexp),
-    LW     -> List(add,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, lw    , nonexp),
-    LH     -> List(add,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, lh    , nonexp),
-    LB     -> List(add,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, lb    , nonexp),
-    LHU    -> List(add,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, lhu   , nonexp),
-    LBU    -> List(add,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, lbu   , nonexp),
-    SW     -> List(add,   rs1,  imm,  mem,   sign, nonsh, s,     nonj, sw    , nonexp),
-    SH     -> List(add,   rs1,  imm,  mem,   sign, nonsh, s,     nonj, sh    , nonexp),
-    SB     -> List(add,   rs1,  imm,  mem,   sign, nonsh, s,     nonj, sb    , nonexp),
-    FENCE  -> List(non,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, nonmem, nonexp),
-    ECALL  -> List(non,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, nonmem, ecall ),
-    EBREAK -> List(non,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, nonmem, ebreak),
+  val instDecodeRes = MuxLookup(io.inst, ControlSignal.instDefault, ControlSignal.instMap)
+
+  val immMap = Seq(
+    ControlSignal.i -> Cat(Fill(21, io.inst(31)), io.inst(30,20)),
+    ControlSignal.s -> Cat(Fill(21, io.inst(31)), io.inst(30,25), io.inst(11,8), io.inst(7)),
+    ControlSignal.b -> Cat(Fill(20, io.inst(31)), io.inst(7), io.inst(30,25), io.inst(11,8), 0.U(1)),
+    ControlSignal.u -> Cat(io.inst(31), io.inst(30,20), io.inst(19,12), Fill(12, 0.U(1.W))),
+    ControlSignal.i -> Cat(Fill(12, io.inst(31)), io.inst(19,12), io.inst(20), io.inst(30,25), io.inst(24,21), 0.U(1.W))
   )
 
+  val imm = MuxLookup(instDecodeRes(7), io.inst, immMap)
+  io.aluA := Mux(instDecodeRes(2) === ControlSignal.rs1, io.rs1, io.pc)
+  io.aluB := Mux(instDecodeRes(3) === ControlSignal.rs2, io.rs2, imm)
+  io.aluOp := instDecodeRes(1)
+  io.writeWhat := instDecodeRes(4)
+  io.sign = instDecodeRes()
 }
 
 
