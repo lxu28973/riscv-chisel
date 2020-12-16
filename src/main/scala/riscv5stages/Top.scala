@@ -13,17 +13,17 @@ class Top extends Module with Param {
     val wdata = Input(UInt(xlen.W))
     val waddr = Input(UInt(xlen.W))
     val exp = Output(UInt())
-    val exmem = new EXMEMBundle()
+    val memwb = new MEMWBBundle
   })
 
   val iMem = Module(new Mem1r1w)
+  val dMem = Module(new MemHasMask)
   val iF = Module(new IF)
   val iD = Module(new ID)
   val eX = Module(new EX)
+  val mEM = Module(new MEM)
   val regFile = Module(new RegFile)
 
-//  val inst = Output(UInt(32.W))
-//  val jump = Input(Bool())
   iF.io.hazard := io.haz
   iF.io.jpc := eX.io.exmem.eXout
   iF.io.toJumpOrBranch := iD.io.toJumpOrBranch
@@ -35,7 +35,10 @@ class Top extends Module with Param {
   io.exp := iD.io.exp
 
   eX.io.idex <> iD.io.idex
-  eX.io.exmem <> io.exmem
+
+  mEM.io.exmem <>  eX.io.exmem
+  mEM.io.memio <> dMem.io
+  mEM.io.memwb <> io.memwb
 
   iMem.io.rAddr := iF.io.pc
   iMem.io.wData := io.iMemWrData

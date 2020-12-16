@@ -6,6 +6,9 @@ import chisel3.util._
 class EXMEMBundle extends Bundle with Param {
   val eXout = Output(UInt(xlen.W))
   val memOp = Output(UInt())
+  val rdInd = Output(UInt(5.W))
+  val rs2 = Output(UInt(xlen.W))
+  val wb = Output(UInt())
 }
 
 class EX extends Module with Param {
@@ -15,10 +18,14 @@ class EX extends Module with Param {
   })
   import io._
 
+  exmem.rdInd := RegNext(idex.rdInd)
+  exmem.memOp := RegNext(idex.memOp)
+  exmem.wb := RegNext(idex.wb)
+  exmem.rs2 := RegNext(idex.rs2)
+
   val aluA = WireInit(idex.aluA)
   val aluB = WireInit(idex.aluB)
 
-  exmem.memOp := RegNext(idex.memOp)
   /*** ALU ***/
   val aluMap = Seq(
     ControlSignal.add -> (aluA + aluB),

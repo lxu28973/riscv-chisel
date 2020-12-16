@@ -11,7 +11,7 @@ object ControlSignal {
   // aluB_sel
   val rs2 :: imm :: Nil = Enum(2)
   // write to memory or register
-  val nonw :: rd :: mem :: Nil = Enum(3)
+  val nonw :: rd :: Nil = Enum(2)
   // expend imm signed or unsigned
   val sign :: unsi :: Nil = Enum(2)
   // shift instruction or not
@@ -28,14 +28,14 @@ object ControlSignal {
   val aluOp = add
   val aluA = rs1
   val aluB = rs2
-  val rgMem = rd
+  val wrReg = rd
   val instT = r
   val jump = nonj
   val memOp = nonmem
   val exp = nonexp
 
   val instDefault =  //0     1     2      3     4      5      6     7      8     9
-              List(aluOp, aluA, aluB, rgMem, sign, nonsh, instT, jump, memOp,  exp)
+              List(aluOp, aluA, aluB, wrReg, sign, nonsh, instT, jump, memOp,  exp)
   val instMap = Array(
     ADDI   -> List(add,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, nonmem, nonexp),
     SLTI   -> List(slt,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, nonmem, nonexp),
@@ -71,9 +71,9 @@ object ControlSignal {
     LB     -> List(add,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, lb    , nonexp),
     LHU    -> List(add,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, lhu   , nonexp),
     LBU    -> List(add,   rs1,  imm,  rd,    sign, nonsh, i,     nonj, lbu   , nonexp),
-    SW     -> List(add,   rs1,  imm,  mem,   sign, nonsh, s,     nonj, sw    , nonexp),
-    SH     -> List(add,   rs1,  imm,  mem,   sign, nonsh, s,     nonj, sh    , nonexp),
-    SB     -> List(add,   rs1,  imm,  mem,   sign, nonsh, s,     nonj, sb    , nonexp),
+    SW     -> List(add,   rs1,  imm,  nonw,  sign, nonsh, s,     nonj, sw    , nonexp),
+    SH     -> List(add,   rs1,  imm,  nonw,  sign, nonsh, s,     nonj, sh    , nonexp),
+    SB     -> List(add,   rs1,  imm,  nonw,  sign, nonsh, s,     nonj, sb    , nonexp),
     FENCE  -> List(non,   rs1,  imm,  nonw,  sign, nonsh, i,     nonj, nonmem, nonexp),
     ECALL  -> List(non,   rs1,  imm,  nonw,  sign, nonsh, i,     nonj, nonmem, ecall ),
     EBREAK -> List(non,   rs1,  imm,  nonw,  sign, nonsh, i,     nonj, nonmem, ebreak)
