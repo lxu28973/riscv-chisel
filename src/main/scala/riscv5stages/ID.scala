@@ -6,9 +6,9 @@ import chisel3.util._
 //import riscv5stages.ControlSignal._
 import riscv5stages.InstPat._
 
-class IDEXBundle(implicit val p: Param) extends Bundle {
-  val aluA = Output(UInt(p.xlen.W))
-  val aluB = Output(UInt(p.xlen.W))
+class IDEXBundle extends Bundle with Param {
+  val aluA = Output(UInt(xlen.W))
+  val aluB = Output(UInt(xlen.W))
   val aluOp = Output(UInt())
   val writeWhat = Output(UInt(2.W))
   val sign = Output(Bool())
@@ -16,12 +16,12 @@ class IDEXBundle(implicit val p: Param) extends Bundle {
   val memOp = Output(UInt())
 }
 
-class ID(implicit p: Param) extends Module{
+class ID extends Module with Param {
   val io = IO(new Bundle() {
-    val pc = Input(UInt(p.xlen.W))
-    val inst = Input(UInt(p.ilen.W))
-    val rs1 = Input(UInt(p.xlen.W))
-    val rs2 = Input(UInt(p.xlen.W))
+    val pc = Input(UInt(xlen.W))
+    val inst = Input(UInt(ilen.W))
+    val rs1 = Input(UInt(xlen.W))
+    val rs2 = Input(UInt(xlen.W))
     val idex = new IDEXBundle()
     val exp = Output(UInt())
     val toJumpOrBranch = Output(Bool())

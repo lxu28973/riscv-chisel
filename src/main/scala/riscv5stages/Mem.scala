@@ -31,16 +31,46 @@ class Mem1r1w(depth: Int = 1024, dataType: Data = UInt(32.W)) extends Module{
 }
 */
 
+trait MaskedMemParam extends Param {
+  val memSize: Int = 1024
+  val memWidth: Int = 32
+  val maskBits: Int = 4
+  val memDataType: Vec[Data] = Vec(maskBits, UInt((memWidth / maskBits).W))
+  require(memWidth % maskBits == 0, "maskBits cannot divide memWidth, memWidth % maskBits =/= 0")
+}
 
-class Mem1r1w(implicit p: Param) extends Module{
+trait NonMaskedMemParam extends Param {
+  val memSize: Int = 1024
+  val memWidth: Int = 32
+  val memDataType: Data = UInt(memWidth.W)
+}
+
+class MemHasMask extends Module with MaskedMemParam {
   val io = IO(new Bundle {
-    val rAddr = Input(UInt(p.xlen.W))
-    val rData = Output(UInt(p.memWidth.W))
-    val wEn = Input(Bool())
-    val wData = Input(UInt(p.memWidth.W))
-    val wAddr = Input(UInt(p.xlen.W))
+    val rAddr = Input(UInt(xlen.W))
+    val rData = Output(UInt(memWidth.W))
+    val wMask = Input(Vec(maskBits, Bool()))
+    val wData = Input(UInt(memWidth.W))
+    val wAddr = Input(UInt(xlen.W))
   })
-  val mem = SyncReadMem(p.memSize, p.memDataType)
+  val mem = SyncReadMem(memSize, memDataType)
+  val wData = Wire(memDataType)
+  val rData = Wire(memDataType)
+  wData := io.wData.asTypeOf(memDataType)
+  mem.write(io.wAddr, wData, io.wMask)
+  rData := mem.read(io.rAddr)
+  io.rData := rData.asUInt()
+}
+
+class Mem1r1w extends Module with NonMaskedMemParam {
+  val io = IO(new Bundle {
+    val rAddr = Input(UInt(xlen.W))
+    val rData = Output(UInt(memWidth.W))
+    val wEn = Input(Bool())
+    val wData = Input(UInt(memWidth.W))
+    val wAddr = Input(UInt(xlen.W))
+  })
+  val mem = SyncReadMem(memSize, memDataType)
   val wrDataReg = RegNext(io.wData)
   val doForwardReg = RegNext(io.wAddr === io.rAddr &&
     io.wEn)

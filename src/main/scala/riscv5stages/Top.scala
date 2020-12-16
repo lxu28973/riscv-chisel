@@ -3,15 +3,15 @@ package riscv5stages
 import chisel3._
 import riscv5stages.ControlSignal._
 
-class Top(implicit p: Param) extends Module{
+class Top extends Module with Param {
   val io = IO(new Bundle() {
     val iMemWrAddr = Input(UInt(32.W))
     val iMemWrData = Input(UInt(32.W))
     val iMemWrEn = Input(Bool())
     val haz = Input(Bool())
     val wen = Input(Bool())
-    val wdata = Input(UInt(p.xlen.W))
-    val waddr = Input(UInt(p.xlen.W))
+    val wdata = Input(UInt(xlen.W))
+    val waddr = Input(UInt(xlen.W))
     val exp = Output(UInt())
     val exmem = new EXMEMBundle()
   })

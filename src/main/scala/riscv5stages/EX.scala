@@ -3,12 +3,12 @@ package riscv5stages
 import chisel3._
 import chisel3.util._
 
-class EXMEMBundle(implicit p: Param) extends Bundle {
-  val eXout = Output(UInt(p.xlen.W))
+class EXMEMBundle extends Bundle with Param {
+  val eXout = Output(UInt(xlen.W))
   val memOp = Output(UInt())
 }
 
-class EX(implicit p: Param) extends Module {
+class EX extends Module with Param {
   val io = IO(new Bundle() {
     val idex = Flipped(new IDEXBundle)
     val exmem = new EXMEMBundle()
