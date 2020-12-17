@@ -67,7 +67,7 @@ class ID extends Module with Param {
     ControlSignal.bge -> !rsLt,
     ControlSignal.bgeu -> !rsLtU
   )
-  io.toJumpOrBranch := MuxLookup(jump, false.B, branchMap)
+  io.toJumpOrBranch := RegNext(MuxLookup(jump, false.B, branchMap))
 
 }
 
