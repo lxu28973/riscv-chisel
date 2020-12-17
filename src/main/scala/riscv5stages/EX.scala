@@ -15,6 +15,7 @@ class EX extends Module with Param {
   val io = IO(new Bundle() {
     val idex = Flipped(new IDEXBundle)
     val exmem = new EXMEMBundle()
+    val pcForward = Output(UInt())
   })
   import io._
 
@@ -48,5 +49,6 @@ class EX extends Module with Param {
   val shiftRse = MuxLookup(idex.shift, 0.U, shiftmap)
 
   exmem.eXout := RegNext(Mux((idex.shift === ControlSignal.nonsh), aluRes, shiftRse))
+  pcForward := aluRes
 
 }

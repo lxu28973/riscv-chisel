@@ -24,13 +24,21 @@ class ID extends Module with Param {
     val inst = Input(UInt(ilen.W))
     val rs1 = Input(UInt(xlen.W))
     val rs2 = Input(UInt(xlen.W))
+    val haz = Input(Bool())
     val idex = new IDEXBundle()
     val exp = Output(UInt())
     val toJumpOrBranch = Output(Bool())
+    val aluA_sel = Output(UInt())
+    val aluB_sel = Output(UInt())
   })
+
+  val toJumpOrBranch = Reg(Bool())
 
   val instDecodeRes = ListLookup(io.inst, ControlSignal.instDefault, ControlSignal.instMap)
   val aluOp :: aluA :: aluB :: wb :: sign :: shift :: instT :: jump :: memOp ::  exp :: Nil = instDecodeRes
+
+  io.aluA_sel := aluA
+  io.aluB_sel := aluB
 
   val immMap = Seq(
     ControlSignal.i -> Cat(Fill(21, io.inst(31)), io.inst(30,20)),
@@ -41,15 +49,15 @@ class ID extends Module with Param {
   )
 
   val imm = MuxLookup(instT, io.inst, immMap)
-  io.idex.aluA := RegNext(Mux(aluA === ControlSignal.rs1, io.rs1, io.pc))
-  io.idex.aluB := RegNext(Mux(aluB === ControlSignal.rs2, io.rs2, imm))
-  io.idex.aluOp := RegNext(aluOp)
-  io.idex.wb := RegNext(wb)
-  io.idex.sign := RegNext(sign.asBool())
-  io.idex.shift := RegNext(shift)
-  io.idex.memOp := RegNext(memOp)
-  io.idex.rdInd := RegNext(io.inst(11,7))
-  io.idex.rs2 := RegNext(io.rs2)
+  io.idex.aluA := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (Mux(aluA === ControlSignal.rs1, io.rs1, io.pc))))
+  io.idex.aluB := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (Mux(aluB === ControlSignal.rs2, io.rs2, imm))))
+  io.idex.aluOp := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (aluOp)))
+  io.idex.wb := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (wb)))
+  io.idex.sign := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (sign.asBool())))
+  io.idex.shift := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (shift)))
+  io.idex.memOp := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (memOp)))
+  io.idex.rdInd := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (io.inst(11,7))))
+  io.idex.rs2 := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (io.rs2)))
 
   io.exp := RegNext(exp)
 
@@ -67,8 +75,9 @@ class ID extends Module with Param {
     ControlSignal.bge -> !rsLt,
     ControlSignal.bgeu -> !rsLtU
   )
-  io.toJumpOrBranch := RegNext(MuxLookup(jump, false.B, branchMap))
 
+  toJumpOrBranch := Mux(toJumpOrBranch, false.B, MuxLookup(jump, false.B, branchMap))
+  io.toJumpOrBranch := toJumpOrBranch
 }
 
 
