@@ -5,7 +5,7 @@ import riscv5stages.InstPat._
 
 object ControlSignal {
   // aluOp
-  val non :: add :: sub :: slt :: and :: or :: xor :: Nil = Enum(7)
+  val non :: add :: sub :: slt :: and :: or :: xor :: copyb :: Nil = Enum(8)
   // aluA_sel
   val rs1 :: pc :: Nil = Enum(2)
   // aluB_sel
@@ -46,7 +46,7 @@ object ControlSignal {
     SLLI   -> List(non,   rs1,  imm,  rd,    sign, sll  , i,     nonj, nonmem, nonexp),
     SRLI   -> List(non,   rs1,  imm,  rd,    sign, srl  , i,     nonj, nonmem, nonexp),
     SRAI   -> List(non,   rs1,  imm,  rd,    sign, sra  , i,     nonj, nonmem, nonexp),
-    LUI    -> List(non,   rs1,  imm,  rd,    sign, nonsh, u,     nonj, nonmem, nonexp),
+    LUI    -> List(copyb, rs1,  imm,  rd,    sign, nonsh, u,     nonj, nonmem, nonexp),
     AUIPC  -> List(add,   pc ,  imm,  rd,    sign, nonsh, u,     nonj, nonmem, nonexp),
     ADD    -> List(add,   rs1,  rs2,  rd,    sign, nonsh, r,     nonj, nonmem, nonexp),
     SLT    -> List(slt,   rs1,  rs2,  rd,    sign, nonsh, r,     nonj, nonmem, nonexp),
