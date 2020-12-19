@@ -1,5 +1,11 @@
-RISCV Chisel Project
+RISC-V Chisel Project
 =======================
+
+This is a simple RISC-V 5-stage pipeline written in Chisel. 
+It now implements RV32I of the User-level ISA Version 2.1, 
+and will implement the Machine-level ISA of the Privileged Architecture Version 1.11 in the feature. 
+Also, simple instruction and data caches planed to add.
+
 
 ### How to get started
 The first thing you want to do is clone this repo into a directory of your own.  I'd recommend creating a chisel projects directory somewhere
