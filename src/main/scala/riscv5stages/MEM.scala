@@ -26,7 +26,7 @@ class MEM extends Module with MaskedMemParam {
     ControlSignal.lb -> memio.rData(bankWidth-1,0).asTypeOf(SInt(memWidth.W)).asUInt,
     ControlSignal.lbu -> memio.rData(bankWidth-1,0).asTypeOf(UInt(memWidth.W)),
     ControlSignal.lh -> memio.rData(2*bankWidth-1,0).asTypeOf(SInt(memWidth.W)).asUInt,
-    ControlSignal.lbu -> memio.rData(2*bankWidth-1,0).asTypeOf(UInt(memWidth.W)),
+    ControlSignal.lhu -> memio.rData(2*bankWidth-1,0).asTypeOf(UInt(memWidth.W)),
     ControlSignal.lw -> memio.rData
   )
 
@@ -34,7 +34,9 @@ class MEM extends Module with MaskedMemParam {
   memio.addr := exmem.eXout
   memio.wData := exmem.rs2
 
-  memwb.data := MuxLookup(exmem.memOp, RegNext(exmem.eXout), memLoadMap)
+  val wbmemOp = RegNext(exmem.memOp)
+
+  memwb.data :=  MuxLookup(wbmemOp, RegNext(exmem.eXout), memLoadMap)
   memwb.rdInd := RegNext(exmem.rdInd)
   memwb.wb := RegNext(exmem.wb)
 

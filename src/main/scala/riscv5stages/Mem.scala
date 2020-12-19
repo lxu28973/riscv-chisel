@@ -2,6 +2,7 @@ package riscv5stages
 
 import Chisel.{isPow2, log2Floor}
 import chisel3._
+import chisel3.util.experimental.loadMemoryFromFile
 
 trait MaskedMemParam extends Param {
   val memSize: Int = 1024
@@ -25,6 +26,7 @@ class MemHasMask extends Module with MaskedMemParam {
   val io = IO(new MaskedMemBundle)
 
   val mem = SyncReadMem(memSize, memDataType)
+  loadMemoryFromFile(mem, "/home/lei/H/ChiselProjects/MyChiselProjects/riscv5stage/src/test/Resources/dmeminit.txt")
 
   val wData = Wire(memDataType)
   val rData = Wire(memDataType)
@@ -56,7 +58,7 @@ class Mem1r1w extends Module with NonMaskedMemParam {
   val io = IO(new NonMaskedMemBundle)
 
   val mem = SyncReadMem(memSize, memDataType)
-
+  loadMemoryFromFile(mem, "/home/lei/H/ChiselProjects/MyChiselProjects/riscv5stage/src/test/Resources/test.txt")
   val wInd = io.wAddr(xlen-1, addrOffset)
   val rInd = io.rAddr(xlen-1, addrOffset)
 

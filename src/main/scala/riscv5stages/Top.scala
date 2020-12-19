@@ -8,7 +8,7 @@ class Top extends Module with Param {
     val iMemWrAddr = Input(UInt(32.W))
     val iMemWrData = Input(UInt(32.W))
     val iMemWrEn = Input(Bool())
-    val exp = Output(UInt())
+    val exp = Output(UInt(2.W))
   })
 
   val iMem = Module(new Mem1r1w)
@@ -25,7 +25,7 @@ class Top extends Module with Param {
   iF.io.toJumpOrBranch := iD.io.toJumpOrBranch
 
   iD.io.inst := iMem.io.rData
-  iD.io.pc := iF.io.pc
+  iD.io.pc := RegNext(iF.io.pc)
   iD.io.rs1 := regFile.io.rdata1
   iD.io.rs2 := regFile.io.rdata2
   iD.io.haz := hazard
@@ -36,7 +36,7 @@ class Top extends Module with Param {
   mEM.io.exmem <>  eX.io.exmem
   mEM.io.memio <> dMem.io
 
-  iMem.io.rAddr := iF.io.pc
+  iMem.io.rAddr := Mux(hazard, iF.io.pc - 4.U, iF.io.pc)
   iMem.io.wData := io.iMemWrData
   iMem.io.wAddr := io.iMemWrAddr
   iMem.io.wEn := io.iMemWrEn
@@ -51,12 +51,12 @@ class Top extends Module with Param {
   val rs1Ind = iMem.io.rData(19,15)
   val rs2Ind = iMem.io.rData(24,20)
 
-  when((((rs1Ind === iD.io.idex.rdInd && iD.io.aluA_sel === ControlSignal.rs1) || (rs2Ind === iD.io.idex.rdInd && iD.io.aluB_sel === ControlSignal.rs2)) && iD.io.idex.rdInd =/= 0.U)
-    || (((rs1Ind === eX.io.idex.rdInd && iD.io.aluA_sel === ControlSignal.rs1) || (rs2Ind === eX.io.idex.rdInd && iD.io.aluB_sel === ControlSignal.rs2)) && eX.io.idex.rdInd =/= 0.U)){
+  when((((rs1Ind === iD.io.idex.rdInd && (iD.io.aluA_sel === ControlSignal.rs1 || iD.io.jump)) || (rs2Ind === iD.io.idex.rdInd && (iD.io.aluB_sel === ControlSignal.rs2 || iD.io.jump))) && iD.io.idex.rdInd =/= 0.U)
+    || (((rs1Ind === eX.io.exmem.rdInd && (iD.io.aluA_sel === ControlSignal.rs1 || iD.io.jump)) || (rs2Ind === eX.io.exmem.rdInd && (iD.io.aluB_sel === ControlSignal.rs2 || iD.io.jump))) && eX.io.exmem.rdInd =/= 0.U)
+    || (((rs1Ind === mEM.io.memwb.rdInd && (iD.io.aluA_sel === ControlSignal.rs1 || iD.io.jump)) || (rs2Ind === mEM.io.memwb.rdInd && (iD.io.aluB_sel === ControlSignal.rs2 || iD.io.jump))) && mEM.io.memwb.rdInd =/= 0.U)){
     hazard := true.B
   }.otherwise(
     hazard := false.B
   )
-
 
 }

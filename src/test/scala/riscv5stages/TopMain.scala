@@ -9,3 +9,8 @@ import chisel3.iotesters
 ////  }
 //}
 
+object TopMain extends App {
+  iotesters.Driver.execute(args, () => new Top) {
+    c => new TopTester(c)
+  }
+}

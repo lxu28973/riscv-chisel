@@ -10,7 +10,7 @@ class IDEXBundle extends Bundle with Param {
   val aluA = Output(UInt(xlen.W))
   val aluB = Output(UInt(xlen.W))
   val aluOp = Output(UInt())
-  val wb = Output(UInt(2.W))
+  val wb = Output(UInt())
   val sign = Output(Bool())
   val shift = Output(UInt(2.W))
   val memOp = Output(UInt())
@@ -30,25 +30,34 @@ class ID extends Module with Param {
     val toJumpOrBranch = Output(Bool())
     val aluA_sel = Output(UInt())
     val aluB_sel = Output(UInt())
+    val jump = Output(Bool())
   })
 
   val toJumpOrBranch = Reg(Bool())
-
-  val instDecodeRes = ListLookup(io.inst, ControlSignal.instDefault, ControlSignal.instMap)
+  val inst = Mux(RegNext(toJumpOrBranch), 0.U, io.inst)
+  val instDecodeRes = ListLookup(inst, ControlSignal.instDefault, ControlSignal.instMap)
   val aluOp :: aluA :: aluB :: wb :: sign :: shift :: instT :: jump :: memOp ::  exp :: Nil = instDecodeRes
 
   io.aluA_sel := aluA
   io.aluB_sel := aluB
+  io.jump := jump =/= ControlSignal.nonj
 
   val immMap = Seq(
-    ControlSignal.i -> Cat(Fill(21, io.inst(31)), io.inst(30,20)),
-    ControlSignal.s -> Cat(Fill(21, io.inst(31)), io.inst(30,25), io.inst(11,8), io.inst(7)),
-    ControlSignal.b -> Cat(Fill(20, io.inst(31)), io.inst(7), io.inst(30,25), io.inst(11,8), 0.U(1)),
-    ControlSignal.u -> Cat(io.inst(31), io.inst(30,20), io.inst(19,12), Fill(12, 0.U(1.W))),
-    ControlSignal.i -> Cat(Fill(12, io.inst(31)), io.inst(19,12), io.inst(20), io.inst(30,25), io.inst(24,21), 0.U(1.W))
+    ControlSignal.i -> Cat(Fill(21, inst(31)), inst(30,20)),
+    ControlSignal.s -> Cat(Fill(21, inst(31)), inst(30,25), inst(11,8), inst(7)),
+    ControlSignal.b -> Cat(Fill(20, inst(31)), inst(7), inst(30,25), inst(11,8), 0.U(1)),
+    ControlSignal.u -> Cat(inst(31), inst(30,20), inst(19,12), Fill(12, 0.U(1.W))),
+    ControlSignal.j -> Cat(Fill(12, inst(31)), inst(19,12), inst(20), inst(30,25), inst(24,21), 0.U(1.W))
   )
 
-  val imm = MuxLookup(instT, io.inst, immMap)
+  val imm = MuxLookup(instT, inst, immMap)
+//  printf("Print during simulation: imm is %b\n", imm)
+//  printf("Print during simulation: instT is %b\n", instT)
+//  printf("Print during simulation: ControlSignal.i is %b\n", ControlSignal.i)
+//  printf("Print during simulation: inst is %b\n", inst)
+//  printf("Print during simulation: immcat is %b\n", Cat(Fill(21, inst(31)), inst(30,20)))
+//  printf("Print during simulation: inst3020 is %b\n", inst(30,20))
+//  printf("\n")
   io.idex.aluA := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (Mux(aluA === ControlSignal.rs1, io.rs1, io.pc))))
   io.idex.aluB := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (Mux(aluB === ControlSignal.rs2, io.rs2, imm))))
   io.idex.aluOp := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (aluOp)))
@@ -56,7 +65,7 @@ class ID extends Module with Param {
   io.idex.sign := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (sign.asBool())))
   io.idex.shift := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (shift)))
   io.idex.memOp := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (memOp)))
-  io.idex.rdInd := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (io.inst(11,7))))
+  io.idex.rdInd := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (inst(11,7))))
   io.idex.rs2 := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (io.rs2)))
 
   io.exp := RegNext(exp)
