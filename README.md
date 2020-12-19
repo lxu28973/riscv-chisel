@@ -9,7 +9,6 @@ cd ~/ChiselProjects
 
 git clone https://github.com/lxu28973/riscv-chisel.git ChiselProject
 cd ChiselProject
-<<<<<<< HEAD
 ```
 
 ### Generate verilog
