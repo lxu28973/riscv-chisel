@@ -9,6 +9,7 @@ cd ~/ChiselProjects
 
 git clone https://github.com/lxu28973/riscv-chisel.git ChiselProject
 cd ChiselProject
+<<<<<<< HEAD
 ```
 
 ### Generate verilog
@@ -54,3 +55,4 @@ sbt 'test:runMain riscv5stages.TopMain --generate-vcd-output off'
 This is the release version of chisel-template. If you have bug fixes or
 changes you would like to see incorporated in this repo, please checkout
 the main branch and submit pull requests against it.
+
