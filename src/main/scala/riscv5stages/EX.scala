@@ -34,7 +34,8 @@ class EX extends Module with Param {
     ControlSignal.slt -> Mux(idex.sign, (Mux(((aluA.asSInt - aluB.asSInt) < 0.S), 1.U, 0.U)), (Mux(((aluA - aluB) < 0.U), 1.U, 0.U))),
     ControlSignal.and -> (aluA & aluB),
     ControlSignal.or  -> (aluA | aluB),
-    ControlSignal.xor -> (aluA ^ aluB)
+    ControlSignal.xor -> (aluA ^ aluB),
+    ControlSignal.copyb -> aluB
   )
 
   /*** SHIFT ***/
