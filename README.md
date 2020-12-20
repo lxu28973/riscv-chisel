@@ -2,7 +2,7 @@ RISC-V Chisel Project
 =======================
 
 This is a simple RISC-V 5-stage pipeline written in Chisel. 
-It now implements RV32I of the User-level ISA Version 2.1, 
+It now implements RV32I Base Integer Instruction Set, Version 2.1,
 and will implement the Machine-level ISA of the Privileged Architecture Version 1.11 in the future. 
 Also, simple instruction and data caches planed to add.
 
