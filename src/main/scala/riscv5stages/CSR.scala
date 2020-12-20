@@ -32,11 +32,16 @@ object CSR {
 
 }
 
+class CSRIO extends Bundle with Param {
+  val csrOp = Input(UInt(2.W))
+  val csrInd = Input(UInt(12.W))
+  val wData = Input(UInt(xlen.W))
+  val rData = Output(UInt(xlen.W))
+}
+
 
 class CSR extends Module with Param {
-  val io = IO(new Bundle() {
-
-  })
+  val io = IO(new CSRIO)
 
   val misa = RegInit(Cat(("b01".asUInt), 0.U(mxlen-28), Reverse("b00000000100000000000000000".asUInt)))
   val mvendorid = RegInit(0.U(mxlen))

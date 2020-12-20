@@ -46,10 +46,16 @@ class EX extends Module with Param {
     ControlSignal.sra -> (aluA.asSInt >> shamt).asUInt
   )
 
+  /*** CSR ***/
+  val csrUnit = new CSR
+  csrUnit.io.csrOp := idex.csrOp
+  csrUnit.io.csrInd := idex.csrInd
+  csrUnit.io.wData := idex.aluA
+
   val aluRes = MuxLookup(idex.aluOp, 0.U, aluMap)
   val shiftRse = MuxLookup(idex.shift, 0.U, shiftmap)
 
-  exmem.eXout := RegNext(Mux((idex.shift === ControlSignal.nonsh), aluRes, shiftRse))
+  exmem.eXout := RegNext(Mux(idex.csrOp === ControlSignal.noncsr, Mux((idex.shift === ControlSignal.nonsh), aluRes, shiftRse), csrUnit.io.rData))
   pcForward := aluRes
 
 }
