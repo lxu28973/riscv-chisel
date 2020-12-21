@@ -7,7 +7,7 @@ import chisel3.util._
 //      mtime, mtimecmp are not implemented now.
 //      mhpmcounter3~31 and mhpmevent3~31 are not implemented. (can hard-wire to 0)
 
-object CSR {
+object CSRAddr {
   /** CSR Address
     *
     * the top two bits (csr[11:10]) indicate whether the register is read/write (00, 01, or 10) or read-only (11),
@@ -29,12 +29,15 @@ object CSR {
   val mepc = 0x30c.U(12.W)
   val mcause = 0x30d.U(12.W)
   val mtval = 0x30e.U(12.W)
+  val mscratch = 0x30f.U(12.W)
 
 }
 
 class CSRIO extends Bundle with Param {
   val csrOp = Input(UInt(2.W))
   val csrInd = Input(UInt(12.W))
+  val scEn = Input(Bool())
+  val rEn = Input(Bool())
   val wData = Input(UInt(xlen.W))
   val rData = Output(UInt(xlen.W))
 }
@@ -68,7 +71,8 @@ class CSR extends Module with Param {
   val sD = 0.U(1.W)
   val mstatus = Cat(sD, 0.U(8.W), tSR, tW, tVM, mXR, sUM, mPRV, xS, fS, mPP, 0.U(2.W), sPP, mPIE, 0.U(1), sPIE, uPIE, mIE, 0.U(1.W), sIE, uIE)
 
-  val mtvec = Wire(0x100.U(32.W))
+
+  val mtvec = 0x100.U(32.W)
 
   // mip
   val mEIP = RegInit(0.U(1.W))
@@ -82,12 +86,81 @@ class CSR extends Module with Param {
   val mSIE = RegInit(1.U(1.W))
   val mie = Cat(0.U((mxlen-12).W), mEIE, 0.U(3.W), mTIE, 0.U(3.W), mSIE, 0.U(3.W))
 
-  val mcycle = Reg(UInt(64.W))
-  val minstret = Reg(UInt(64.W))
+  val mcycle = Reg(UInt(32.W))
+  val mcycleh = Reg(UInt(32.W))
+  val minstret = Reg(UInt(32.W))
+  val minstreth = Reg(UInt(32.W))
 
   val mscratch = Reg(UInt(mxlen.W))
   val mepc = Reg(UInt(mxlen.W))
   val mcause = Reg(UInt(mxlen.W))
   val mtval = Reg(UInt(mxlen.W))
 
+  /*** Read ***/
+  val readMap = Seq(
+    CSRAddr.misa -> misa,
+    CSRAddr.mvendorid -> mvendorid,
+    CSRAddr.mimpid -> mimpid,
+    CSRAddr.mhartid -> mhartid,
+    CSRAddr.mstatus -> mstatus,
+    CSRAddr.mtvec -> mtvec,
+    CSRAddr.mip -> mip,
+    CSRAddr.mie -> mie,
+    CSRAddr.mcycle -> mcycle,
+    CSRAddr.mcycleh -> mcycleh,
+    CSRAddr.minstret -> minstret,
+    CSRAddr.minstreth -> minstreth,
+    CSRAddr.mepc -> mepc,
+    CSRAddr.mcause -> mcause,
+    CSRAddr.mtval -> mtval
+  )
+
+  val rData = MuxLookup(io.csrInd, 0.U(32.W), readMap)
+
+  io.rData := 0.U(32.W)
+  when(io.csrOp === ControlSignal.csrRW){
+    when(io.rEn){
+      io.rData := rData
+    }
+  }.elsewhen(io.csrOp === ControlSignal.csrRC || io.csrOp === ControlSignal.csrRS){
+    io.rData := rData
+  }
+
+  /*** Write ***/
+  val wData = MuxLookup(io.csrOp, 0.U, Seq(
+    ControlSignal.csrRW -> io.wData,
+    ControlSignal.csrRC -> (io.rData & (~io.wData).asUInt),
+    ControlSignal.csrRS -> (io.rData | io.wData)
+  ))
+  val wEn = (io.scEn && (io.csrOp === ControlSignal.csrRC || io.csrOp === ControlSignal.csrRS)) || io.csrOp === ControlSignal.csrRW
+  when(wEn){
+    when(io.csrInd === CSRAddr.mstatus){
+      mIE := wData(3)
+      mPIE := wData(7)
+    }.elsewhen(io.csrInd === CSRAddr.mip){
+      mEIP := wData(11)
+      mTIP := wData(7)
+      mSIP := wData(3)
+    }.elsewhen(io.csrInd === CSRAddr.mie){
+      mEIE := wData(11)
+      mTIE := wData(7)
+      mSIE := wData(3)
+    }.elsewhen(io.csrInd === CSRAddr.mcycle){
+      mcycle := wData
+    }.elsewhen(io.csrInd === CSRAddr.mcycleh){
+      mcycleh := wData
+    }.elsewhen(io.csrInd === CSRAddr.minstret){
+      minstret := wData
+    }.elsewhen(io.csrInd === CSRAddr.minstreth){
+      minstreth := wData
+    }.elsewhen(io.csrInd === CSRAddr.mscratch){
+      mscratch := wData
+    }.elsewhen(io.csrInd === CSRAddr.mepc){
+      mepc := Cat(wData(31,2), 0.U(2.W))
+    }.elsewhen(io.csrInd === CSRAddr.mcause){
+      mcause := wData
+    }.elsewhen(io.csrInd === CSRAddr.mtval){
+      mtval := wData
+    }
+  }
 }

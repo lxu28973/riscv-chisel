@@ -18,6 +18,7 @@ class IDEXBundle extends Bundle with Param {
   val rs2 = Output(UInt(xlen.W))
   val csrOp = Output(UInt())
   val csrInd = Output(UInt(12.W))
+  val csrWen = Output(Bool())
 }
 
 class ID extends Module with Param {
@@ -45,7 +46,6 @@ class ID extends Module with Param {
   io.jump := jump =/= ControlSignal.nonj
 
   val csrUimm = Cat(0.U((xlen-5).W), inst(19,15))
-
   val immMap = Seq(
     ControlSignal.i -> Cat(Fill(21, inst(31)), inst(30,20)),
     ControlSignal.s -> Cat(Fill(21, inst(31)), inst(30,25), inst(11,8), inst(7)),
@@ -55,13 +55,7 @@ class ID extends Module with Param {
   )
 
   val imm = MuxLookup(instT, inst, immMap)
-//  printf("Print during simulation: imm is %b\n", imm)
-//  printf("Print during simulation: instT is %b\n", instT)
-//  printf("Print during simulation: ControlSignal.i is %b\n", ControlSignal.i)
-//  printf("Print during simulation: inst is %b\n", inst)
-//  printf("Print during simulation: immcat is %b\n", Cat(Fill(21, inst(31)), inst(30,20)))
-//  printf("Print during simulation: inst3020 is %b\n", inst(30,20))
-//  printf("\n")
+
   io.idex.aluA := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (Mux(csrin.asBool, csrUimm, Mux(aluA === ControlSignal.rs1, io.rs1, io.pc)))))
   io.idex.aluB := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (Mux(aluB === ControlSignal.rs2, io.rs2, imm))))
   io.idex.aluOp := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (aluOp)))
@@ -73,6 +67,7 @@ class ID extends Module with Param {
   io.idex.rs2 := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, (io.rs2)))
   io.idex.csrOp := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, csrOp))
   io.idex.csrInd := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, inst(31,20)))
+  io.idex.csrWen := RegNext(inst(19,15) =/= 0.U)
 
   io.exp := RegNext(exp)
 

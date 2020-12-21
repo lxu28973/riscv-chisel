@@ -47,10 +47,12 @@ class EX extends Module with Param {
   )
 
   /*** CSR ***/
-  val csrUnit = new CSR
+  val csrUnit = Module(new CSR)
   csrUnit.io.csrOp := idex.csrOp
   csrUnit.io.csrInd := idex.csrInd
   csrUnit.io.wData := idex.aluA
+  csrUnit.io.rEn := idex.rdInd =/= 0.U
+  csrUnit.io.scEn := idex.csrWen
 
   val aluRes = MuxLookup(idex.aluOp, 0.U, aluMap)
   val shiftRse = MuxLookup(idex.shift, 0.U, shiftmap)
