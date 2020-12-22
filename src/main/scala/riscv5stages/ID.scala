@@ -19,6 +19,8 @@ class IDEXBundle extends Bundle with Param {
   val csrOp = Output(UInt())
   val csrInd = Output(UInt(12.W))
   val csrWen = Output(Bool())
+  val pc_jump = Output(UInt())
+  val exp = Output(UInt())
 }
 
 class ID extends Module with Param {
@@ -29,7 +31,6 @@ class ID extends Module with Param {
     val rs2 = Input(UInt(xlen.W))
     val haz = Input(Bool())
     val idex = new IDEXBundle()
-    val exp = Output(UInt())
     val toJumpOrBranch = Output(Bool())
     val aluA_sel = Output(UInt())
     val aluB_sel = Output(UInt())
@@ -39,7 +40,7 @@ class ID extends Module with Param {
   val toJumpOrBranch = Reg(Bool())
   val inst = Mux(RegNext(toJumpOrBranch), 0.U, io.inst)
   val instDecodeRes = ListLookup(inst, ControlSignal.instDefault, ControlSignal.instMap)
-  val aluOp :: aluA :: aluB :: wb :: sign :: shift :: instT :: jump :: memOp ::  exp :: csrOp :: csrin :: Nil = instDecodeRes
+  val aluOp :: aluA :: aluB :: wb :: sign :: shift :: instT :: jump :: memOp ::  exp :: csrOp :: csrin :: pc_jump :: Nil = instDecodeRes
 
   io.aluA_sel := aluA
   io.aluB_sel := aluB
@@ -68,8 +69,9 @@ class ID extends Module with Param {
   io.idex.csrOp := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, csrOp))
   io.idex.csrInd := RegNext(Mux(io.haz | toJumpOrBranch, 0.U, inst(31,20)))
   io.idex.csrWen := RegNext(inst(19,15) =/= 0.U)
+  io.idex.pc_jump := RegNext(pc_jump)
 
-  io.exp := RegNext(exp)
+  io.idex.exp := RegNext(exp)
 
   /*** BRANCH ***/
   val rsEq = (io.rs1 === io.rs2)
@@ -88,7 +90,5 @@ class ID extends Module with Param {
 
   toJumpOrBranch := Mux(toJumpOrBranch, false.B, MuxLookup(jump, false.B, branchMap))
   io.toJumpOrBranch := toJumpOrBranch
-
-
 
 }

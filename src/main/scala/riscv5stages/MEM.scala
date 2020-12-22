@@ -7,6 +7,7 @@ class MEMWBBundle extends Bundle with Param {
   val wb = Output(UInt())
   val data = Output(UInt(xlen.W))
   val rdInd = Output(UInt(5.W))
+  val exp = Output(UInt())
 }
 
 class MEM extends Module with MaskedMemParam {
@@ -39,5 +40,6 @@ class MEM extends Module with MaskedMemParam {
   memwb.data :=  MuxLookup(wbmemOp, RegNext(exmem.eXout), memLoadMap)
   memwb.rdInd := RegNext(exmem.rdInd)
   memwb.wb := RegNext(exmem.wb)
+  memwb.exp := RegNext(exmem.exp)
 
 }

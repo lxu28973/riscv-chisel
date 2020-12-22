@@ -9,6 +9,7 @@ class EXMEMBundle extends Bundle with Param {
   val rdInd = Output(UInt(5.W))
   val rs2 = Output(UInt(xlen.W))
   val wb = Output(UInt())
+  val exp = Output(UInt())
 }
 
 class EX extends Module with Param {
@@ -23,6 +24,7 @@ class EX extends Module with Param {
   exmem.memOp := RegNext(idex.memOp)
   exmem.wb := RegNext(idex.wb)
   exmem.rs2 := RegNext(idex.rs2)
+  exmem.exp := RegNext(idex.exp)
 
   val aluA = WireInit(idex.aluA)
   val aluB = WireInit(idex.aluB)
@@ -58,6 +60,6 @@ class EX extends Module with Param {
   val shiftRse = MuxLookup(idex.shift, 0.U, shiftmap)
 
   exmem.eXout := RegNext(Mux(idex.csrOp === ControlSignal.noncsr, Mux((idex.shift === ControlSignal.nonsh), aluRes, shiftRse), csrUnit.io.rData))
-  pcForward := aluRes
+  pcForward := Mux(idex.pc_jump === ControlSignal.pc_jump, aluRes, csrUnit.io.epc)
 
 }

@@ -40,6 +40,7 @@ class CSRIO extends Bundle with Param {
   val rEn = Input(Bool())
   val wData = Input(UInt(xlen.W))
   val rData = Output(UInt(xlen.W))
+  val epc = Output(UInt(xlen.W))
 }
 
 
@@ -95,6 +96,10 @@ class CSR extends Module with Param {
   val mepc = Reg(UInt(mxlen.W))
   val mcause = Reg(UInt(mxlen.W))
   val mtval = Reg(UInt(mxlen.W))
+
+
+  io.epc := mepc
+
 
   /*** Read ***/
   val readMap = Seq(

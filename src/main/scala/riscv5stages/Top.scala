@@ -29,12 +29,12 @@ class Top extends Module with Param {
   iD.io.rs1 := regFile.io.rdata1
   iD.io.rs2 := regFile.io.rdata2
   iD.io.haz := hazard
-  io.exp := iD.io.exp
 
   eX.io.idex <> iD.io.idex
 
   mEM.io.exmem <>  eX.io.exmem
   mEM.io.memio <> dMem.io
+  io.exp := mEM.io.exmem.exp
 
   iMem.io.rAddr := Mux(hazard, iF.io.pc - 4.U, iF.io.pc)
   iMem.io.wData := io.iMemWrData
