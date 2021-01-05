@@ -14,22 +14,22 @@ object CSRAddr {
     * the next two bits (csr[9:8]) encode the lowest privilege level that can access the CSR,
     * in this implement, only support M-Mode, so csr[9:8] always be "b11".
      */
-  val misa = 0xf00.U(12.W)
-  val mvendorid = 0xf01.U(12.W)
-  val mimpid = 0xf02.U(12.W)
-  val mhartid = 0xf03.U(12.W)
-  val mstatus = 0x304.U(12.W)
-  val mtvec = 0xf05.U(12.W)
-  val mip = 0x306.U(12.W)
-  val mie = 0x307.U(12.W)
-  val mcycle = 0x308.U(12.W)
-  val mcycleh = 0x309.U(12.W)
-  val minstret = 0x30a.U(12.W)
-  val minstreth = 0x30b.U(12.W)
-  val mepc = 0x30c.U(12.W)
-  val mcause = 0x30d.U(12.W)
-  val mtval = 0x30e.U(12.W)
-  val mscratch = 0x30f.U(12.W)
+  val misa = 0x301.U(12.W)
+  val mvendorid = 0xf11.U(12.W)
+  val mimpid = 0xf13.U(12.W)
+  val mhartid = 0xf14.U(12.W)
+  val mstatus = 0x300.U(12.W)
+  val mtvec = 0x305.U(12.W)
+  val mip = 0x344.U(12.W)
+  val mie = 0x304.U(12.W)
+  val mcycle = 0xb00.U(12.W)
+  val mcycleh = 0xb80.U(12.W)
+  val minstret = 0xb02.U(12.W)
+  val minstreth = 0xb82.U(12.W)
+  val mepc = 0x341.U(12.W)
+  val mcause = 0x342.U(12.W)
+  val mtval = 0x343.U(12.W)
+  val mscratch = 0x340.U(12.W)
 
 }
 
